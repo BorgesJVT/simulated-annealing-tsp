@@ -14,7 +14,7 @@ endif()
 
 find_package( OpenCV REQUIRED )
 
-add_executable(sa src/main.cpp src/tsp.cpp )
+add_executable(sa src/main.cpp src/tsp.cpp src/optimizer.cpp)
 
 target_link_libraries( sa
     ${OpenCV_LIBS}

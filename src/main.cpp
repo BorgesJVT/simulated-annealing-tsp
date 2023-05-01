@@ -1,4 +1,5 @@
 #include "tsp.h"
+#include "optimizer.h"
 #include <map>
 #include <string>
 
@@ -51,7 +52,7 @@ int main(int argc, const char** argv)
     // Optimizer loop counts
     optimizer.outerLoops = 100;
     optimizer.innerLoops = 5000;
-    // Update the GUI every 2000 iterations
+    // Update the GUI every x iterations
     optimizer.notificationCycle = 1000;
     
     // Run the program
