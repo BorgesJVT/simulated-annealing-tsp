@@ -6,13 +6,14 @@
 
 void TSPInstance::createCircleOfCities(int n)
 {
+    const float radius = 100.0;
     float dTheta = 2*M_PI/n;
     // We generate cities on a 1000x1000 pixel plane
     for (int i = 0; i < n; i++)
     {
         // Create a city in a circle of radius 100
-        float x = 100.0*cos(dTheta*i) + 100.0;
-        float y = 100.0*sin(dTheta*i) + 100.0;
+        float x = radius*cos(dTheta*i) + radius;
+        float y = radius*sin(dTheta*i) + radius;
         City city = std::make_pair(x, y);
         // Add the city
         addCity(city);

@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <random>
 #include <opencv2/opencv.hpp>
-// #include <CvPlot/cvplot.h>
+#include <CvPlot/cvplot.h>
 
 #include "tsp.h"
 
@@ -40,7 +40,7 @@ public:
          * The current proposed energy (this variable is just for plotting in GUI).
          * You can remove it from the code without losses.
          */
-        float proposed_energy;
+        float proposedEnergy;
         /**
          * The energies proposed
          */
@@ -174,9 +174,12 @@ public:
      * The notification cycle. Every c iterations, the observers are notified
      */
     int notificationCycle;
-    
     /**
-     * Runs the optimizer on a specific problem instance
+     * Runs the optimizer on a specific problem instance using Brute Force Dynamic Programming
+     */   
+    void optimize(const TSPInstance& instance, std::vector<int> & result, std::string brute_force) const;
+    /**
+     * Runs the optimizer on a specific problem instance using Simulated Annealing
      */
     void optimize(const TSPInstance & instance, std::vector<int> & result) const;
     
@@ -338,6 +341,6 @@ private:
      * The GUI matrix
      */
     cv::Mat gui;
-    cv::Mat bestEnergyPlot;
+    // CvPlot::Axes energyPlot;
 }; // end of RuntimeGUI class
 #endif

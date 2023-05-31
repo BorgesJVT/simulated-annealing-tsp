@@ -4,6 +4,13 @@
 /// Optimizer
 ////////////////////////////////////////////////////////////////////////////////
 
+// Brute force Dynamic Programming
+void Optimizer::optimize(const TSPInstance& instance, std::vector<int> & result, std::string brute_force) const
+{
+
+}
+
+// Simulated Annealing 
 void Optimizer::optimize(const TSPInstance& instance, std::vector<int> & result) const
 {
     // Get the number of cities
@@ -36,9 +43,9 @@ void Optimizer::optimize(const TSPInstance& instance, std::vector<int> & result)
     
     std::mt19937 g({std::random_device{}()});
     // Set up an initial distribution over the possible moves
-    std::uniform_int_distribution<int> moveDist(0,static_cast<int>(moves.size()) - 1);
+    std::uniform_int_distribution<int> moveDist(0, static_cast<int>(moves.size()) - 1);
     // A uniform distribution for the acceptance probability
-    std::uniform_real_distribution<float> uniformDist(0.0f,1.0f);
+    std::uniform_real_distribution<float> uniformDist(0.0f, 1.0f);
     
     // Set up the mover service 
     Optimizer::MoveService* service = new Optimizer::MoveService(n);
@@ -52,7 +59,9 @@ void Optimizer::optimize(const TSPInstance& instance, std::vector<int> & result)
     
     // A total loop counter for the notification cycle
     int loopCounter = 0;
-    
+    // Start timer
+    auto lastUpdate = std::chrono::system_clock::now();
+
     // Start the optimization
     for (config.outer = 0; config.outer < outerLoops; config.outer++)
     {
@@ -70,15 +79,15 @@ void Optimizer::optimize(const TSPInstance& instance, std::vector<int> & result)
             moves[m]->propose(proposal);
             
             // Get the energy of the new proposal
-            const float energy = instance.calcTourLength(proposal);
-            const float delta = energy - config.energy;
+            config.proposedEnergy = instance.calcTourLength(proposal);
+            const float delta = config.proposedEnergy - config.energy;
             
             // Did we decrease the energy?
             if (delta <= 0)
             {
                 // Accept the move
                 config.state = proposal;
-                config.energy = energy;
+                config.energy = config.proposedEnergy;
             }
             else
             {
@@ -87,15 +96,15 @@ void Optimizer::optimize(const TSPInstance& instance, std::vector<int> & result)
                 if (u <= std::exp(-1/config.temp * delta))
                 {
                     config.state = proposal;
-                    config.energy = energy;
+                    config.energy = config.proposedEnergy;
                 }
             }
             
             // Is this better than the best global optimum?
-            if (energy < config.bestEnergy)
+            if (config.proposedEnergy < config.bestEnergy)
             {
                 // It is
-                config.bestEnergy = energy;
+                config.bestEnergy = config.proposedEnergy;
                 config.bestState = proposal;
             }
             
@@ -109,8 +118,14 @@ void Optimizer::optimize(const TSPInstance& instance, std::vector<int> & result)
                 }
             }
             loopCounter++;
-        }
-    }
+            config.proposedEnergies.push_back(config.proposedEnergy);
+        } // end inner loop (markov chain)
+    } // end outer loop
+    // compute time difference to start timer
+    long timeSinceLastUpdate =
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lastUpdate).count();
+    std::cout << "Elapsed time for optimization: " << timeSinceLastUpdate << "ms" << std::endl;
+    // config.timeExecution = timeSinceLastUpdate;
     
     // Unregister the move service
     DELETE_PTR(service);
@@ -145,6 +160,7 @@ void RuntimeGUI::notify(const TSPInstance & instance, const Optimizer::Config & 
     gui = cv::Scalar(0);
 
     // Get the status marker
+    int statusRow = 0.05 * gui.rows;
     int statusCol = 0.75 * gui.cols;
 
     // Write the status
@@ -152,7 +168,7 @@ void RuntimeGUI::notify(const TSPInstance & instance, const Optimizer::Config & 
     ss << "temp = " << config.temp;
     cv::putText(    gui, 
                     ss.str(), 
-                    cv::Point(statusCol, 15), 
+                    cv::Point(statusRow, statusCol+15), 
                     cv::FONT_HERSHEY_PLAIN, 
                     0.9, 
                     cv::Scalar(255,255,255));
@@ -160,7 +176,7 @@ void RuntimeGUI::notify(const TSPInstance & instance, const Optimizer::Config & 
     ss << "outer = " << config.outer;
     cv::putText(    gui, 
                     ss.str(), 
-                    cv::Point(statusCol, 30), 
+                    cv::Point(statusRow, statusCol+30), 
                     cv::FONT_HERSHEY_PLAIN, 
                     0.9, 
                     cv::Scalar(255,255,255));
@@ -168,15 +184,15 @@ void RuntimeGUI::notify(const TSPInstance & instance, const Optimizer::Config & 
     ss << "inner = " << config.inner;
     cv::putText(    gui, 
                     ss.str(), 
-                    cv::Point(statusCol, 45), 
+                    cv::Point(statusRow, statusCol+45), 
                     cv::FONT_HERSHEY_PLAIN, 
                     0.9, 
                     cv::Scalar(255,255,255));
     ss.str("");
-    ss << "energy = " << config.energy;
+    ss << "energy = " << config.proposedEnergy;
     cv::putText(    gui, 
                     ss.str(), 
-                    cv::Point(statusCol, 60), 
+                    cv::Point(statusRow, statusCol+60), 
                     cv::FONT_HERSHEY_PLAIN, 
                     0.9, 
                     cv::Scalar(255,255,255));
@@ -184,10 +200,20 @@ void RuntimeGUI::notify(const TSPInstance & instance, const Optimizer::Config & 
     ss << "best energy = " << config.bestEnergy;
     cv::putText(    gui, 
                     ss.str(), 
-                    cv::Point(statusCol, 75), 
+                    cv::Point(statusRow, statusCol+75), 
                     cv::FONT_HERSHEY_PLAIN, 
                     0.9, 
                     cv::Scalar(255,255,255));
+    ss.str("");
+    // ss << "best state = [" << config.bestState[0] << "  " << config.bestState[1] << "  " << config.bestState[2] << "  " << config.bestState[3] << "]";
+    // cv::putText(    gui, 
+    //                 ss.str(), 
+    //                 cv::Point(statusRow, statusCol+90), 
+    //                 cv::FONT_HERSHEY_PLAIN, 
+    //                 0.9, 
+    //                 cv::Scalar(255,255,255));
+    // ss.str("");
+
 
     // Plot the charts
     // [...]
@@ -251,7 +277,12 @@ void RuntimeGUI::notify(const TSPInstance & instance, const Optimizer::Config & 
         cv::circle(gui, p1, 2, cv::Scalar(200,200,200), 2);
     }
 
-    cv::imshow("GUI", gui);
+    cv::imshow("TSP", gui);
+
+    auto energyPlot = CvPlot::plot(config.proposedEnergies);
+    cv::Mat energyPlotMat = energyPlot.render(1000, 1500);
+    cv::imshow("Energy Plot", energyPlotMat);
+
     if (config.terminated)
     {
         cv::waitKey(0);

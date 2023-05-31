@@ -21,43 +21,40 @@ int main(int argc, const char** argv)
     }
     else
     {
-        instance.createRandom(50);
+        instance.createCircleOfCities(30);
     }
     instance.calcDistanceMatrix();
     
     // Set up the optimizer 
     Optimizer optimizer;
     
-    // Register the moves
-    ChainReverseMove move1;
-    SwapCityMove move2;
-    RotateCityMove move3;
-    optimizer.addMove(&move1);
-    optimizer.addMove(&move2);
-    optimizer.addMove(&move3);
-    
     // Register the GUI
     // You can specify the dimensions of the window
     RuntimeGUI gui(750, 750);
+    // The time the GUI stops after each iterations. Set to 0 to wait for a keypress
+    gui.waitTime = 5;
     optimizer.addObserver(&gui);
+
+
+    // Register the moves
+    SwapCityMove move;
+    optimizer.addMove(&move);
     
-    // The time the GUI stops after each iterations. Set to 0 to wait for a 
-    // keypress
-    gui.waitTime = 7;
     
     // Choose a cooling schedule
-    GeometricCoolingSchedule schedule(150, 1e-2, 0.95);
+    GeometricCoolingSchedule schedule(100, 1e-2, 0.99);
     optimizer.coolingSchedule = &schedule;
     
     // Optimizer loop counts
-    optimizer.outerLoops = 100;
-    optimizer.innerLoops = 5000;
+    optimizer.outerLoops = 300;
+    optimizer.innerLoops = 100;
     // Update the GUI every x iterations
-    optimizer.notificationCycle = 1000;
+    optimizer.notificationCycle = 100;
     
     // Run the program
     std::vector<int> result;
     optimizer.optimize(instance, result);
+    // optimizer.optimize(instance, result, "brute force");
     
     return 0;
 }

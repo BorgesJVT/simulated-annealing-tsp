@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.6)
-project(SA)
+project(SolvingTSP)
 
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
@@ -14,8 +14,9 @@ endif()
 
 find_package( OpenCV REQUIRED )
 
-add_executable(sa src/main.cpp src/tsp.cpp src/optimizer.cpp)
+add_executable(solving_tsp src/main.cpp src/tsp.cpp src/optimizer.cpp)
 
-target_link_libraries( sa
+target_compile_definitions(solving_tsp PUBLIC CVPLOT_HEADER_ONLY)
+target_link_libraries( solving_tsp
     ${OpenCV_LIBS}
 )
