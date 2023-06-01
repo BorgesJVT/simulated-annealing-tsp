@@ -37,24 +37,24 @@ int main(int argc, const char** argv)
 
 
     // Register the moves
-    SwapCityMove move;
-    optimizer.addMove(&move);
+    // SwapCityMove move;
+    // optimizer.addMove(&move);
     
     
     // Choose a cooling schedule
-    GeometricCoolingSchedule schedule(100, 1e-2, 0.99);
-    optimizer.coolingSchedule = &schedule;
+    // GeometricCoolingSchedule schedule(100, 1e-2, 0.99);
+    // optimizer.coolingSchedule = &schedule;
     
     // Optimizer loop counts
-    optimizer.outerLoops = 300;
-    optimizer.innerLoops = 100;
+    // optimizer.outerLoops = 300;
+    // optimizer.innerLoops = 100;
     // Update the GUI every x iterations
-    optimizer.notificationCycle = 100;
+    // optimizer.notificationCycle = 1;
     
     // Run the program
     std::vector<int> result;
-    optimizer.optimize(instance, result);
-    // optimizer.optimize(instance, result, "brute force");
+    // optimizer.optimize(instance, result);
+    optimizer.optimize(instance, result, "SGA");
     
     return 0;
 }

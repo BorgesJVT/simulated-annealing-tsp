@@ -14,6 +14,43 @@
  */
 class Optimizer {
 public:
+    class ConfigSA {
+    public:
+        ConfigSA() : populationSize(10), numGenerations(1000), currentGenerationNumber(0), energy(0), bestEnergy(0), terminated(false) {}
+        /**
+         * The population size
+         */
+        int populationSize;
+        /**
+         * The number of generations
+         */
+        int numGenerations;
+        /**
+         * The current generation in execution
+         */
+        int currentGenerationNumber;
+        /**
+         * The current distance
+         */
+        float energy;
+        /**
+         * The best energy: shortest distance so far
+         */
+        float bestEnergy;
+        /**
+         * Current state
+         */
+        std::vector<int> state;
+        /**
+         * The best state observed so far
+         */
+        std::vector<int> bestState;
+        /**
+         * Whether or not the system has terminated
+         */
+        bool terminated;
+    };
+
     /**
      * The runtime configuration of the algorithm
      */
@@ -76,6 +113,7 @@ public:
         /**
          * This method is called by the optimizer
          */
+        virtual void notify(const TSPInstance & instance, const ConfigSA & config) = 0;
         virtual void notify(const TSPInstance & instance, const Config & config) = 0;
     };
     
@@ -177,7 +215,7 @@ public:
     /**
      * Runs the optimizer on a specific problem instance using Brute Force Dynamic Programming
      */   
-    void optimize(const TSPInstance& instance, std::vector<int> & result, std::string brute_force) const;
+    // void optimize(const TSPInstance& instance, std::vector<int> & result, std::string brute_force) const;
     /**
      * Runs the optimizer on a specific problem instance using Simulated Annealing
      */
@@ -198,6 +236,9 @@ public:
     {
         moves.push_back(move);
     }
+    
+    // Simple Genetic Algorithm
+    void optimize(const TSPInstance& instance, std::vector<int> & result, std::string geneticAlgorithm) const;
     
 private:
     /**
@@ -328,7 +369,8 @@ public:
     /**
      * Paint the gui
      */
-    virtual void notify(const TSPInstance & instance, const Optimizer::Config & config);
+    virtual void notify(const TSPInstance & instance, const Optimizer::ConfigSA & configSA) override;
+    virtual void notify(const TSPInstance & instance, const Optimizer::Config & config) override;
     
     /**
      * The time the GUI pauses after each update. Set to 0 to let

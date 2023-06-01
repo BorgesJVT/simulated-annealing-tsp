@@ -5,11 +5,146 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 // Brute force Dynamic Programming
-void Optimizer::optimize(const TSPInstance& instance, std::vector<int> & result, std::string brute_force) const
-{
+// void Optimizer::optimize(const TSPInstance& instance, std::vector<int> & result, std::string brute_force) const
+// {
 
+// }
+
+/* SIMPLE GENETIC ALGORITHM */
+// Function to create a random tour
+std::vector<int> createRandomTour(int numCities) 
+{
+    std::vector<int> tour(numCities);
+    for (int i = 0; i < numCities; ++i) {
+        tour[i] = i;
+    }
+    std::mt19937 gen({std::random_device{}()});
+    shuffle(tour.begin(), tour.end(), gen);
+    return tour;
 }
 
+// Function to perform mutation by swapping two cities
+void mutate(std::vector<int>& tour) {
+    int numCities = tour.size();
+    std::mt19937 gen({std::random_device{}()});
+    std::uniform_int_distribution<> dis(0, numCities - 1);
+    int index1 = dis(gen);
+    int index2 = dis(gen);
+    std::swap(tour[index1], tour[index2]);
+}
+
+// Function to perform selection using tournament selection
+std::vector<int> selection(const std::vector<std::vector<int>>& population, const TSPInstance& instance) {
+    std::mt19937 gen({std::random_device{}()});
+    std::uniform_int_distribution<> dis(0, population.size() - 1);
+
+    std::vector<int> selectedTour;
+    double bestDistance = std::numeric_limits<double>::max();
+
+    for (int i = 0; i < 2; ++i) {
+        int index = dis(gen);
+        const std::vector<int>& tour = population[index];
+        double distance = instance.calcTourLength(tour);
+        if (distance < bestDistance) {
+            bestDistance = distance;
+            selectedTour = tour;
+        }
+    }
+
+    return selectedTour;
+}
+
+// Function to perform crossover using ordered crossover
+std::vector<int> crossover(const std::vector<int>& parent1, const std::vector<int>& parent2) {
+    int numCities = parent1.size();
+    std::vector<int> child(numCities, -1);
+    std::mt19937 gen({std::random_device{}()});
+    std::uniform_int_distribution<> dis(0, numCities - 1);
+    int startPos = dis(gen);
+    int endPos = dis(gen);
+
+    for (int i = startPos; i <= endPos; ++i) {
+        child[i] = parent1[i];
+    }
+
+    int parent2Index = 0;
+    for (int i = 0; i < numCities; ++i) {
+        if (find(child.begin(), child.end(), parent2[i]) == child.end()) {
+            while (child[parent2Index] != -1) {
+                ++parent2Index;
+            }
+            child[parent2Index] = parent2[i];
+        }
+    }
+
+    return child;
+}
+
+void Optimizer::optimize(const TSPInstance& instance, std::vector<int> & result, std::string geneticAlgorithm) const 
+{
+    // Set up the runtime configuration
+    ConfigSA configSA;
+
+    // Get the number of cities
+    int numCities = static_cast<int>(instance.getCities().size());
+
+    // Generate initial population
+    std::vector<std::vector<int>> population(configSA.populationSize);
+    for (int i = 0; i < configSA.populationSize; ++i) {
+        population[i] = createRandomTour(numCities);
+    }
+
+    // Main loop for the specified number of generations
+    for (int generation = 0; generation < configSA.numGenerations; ++generation) {
+        // Create a new population for the next generation
+        std::vector<std::vector<int>> newPopulation(configSA.populationSize);
+
+        // Perform selection, crossover, and mutation to create the new population
+        for (int i = 0; i < configSA.populationSize; ++i) {
+            std::vector<int> parent1 = selection(population, instance);
+            std::vector<int> parent2 = selection(population, instance);
+            std::vector<int> child = crossover(parent1, parent2);
+            mutate(child);
+            newPopulation[i] = child;
+        }
+
+        // Replace the current population with the new population
+        population = newPopulation;
+        configSA.currentGenerationNumber = generation;
+
+        // Find the best tour in the population
+        double bestDistance = std::numeric_limits<double>::max();
+        std::vector<int> bestTour;
+        for (const auto& tour : population) {
+            double distance = instance.calcTourLength(tour);
+            configSA.state = tour;
+            configSA.energy = distance;
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                bestTour = tour;
+            }
+        }
+
+        configSA.bestState = bestTour;
+        configSA.bestEnergy = bestDistance;
+
+        // Should we notify the observers?
+        for (size_t i = 0; i < observers.size(); i++)
+        {
+            observers[i]->notify(instance, configSA);
+        }
+    }
+
+    // Do the final notification
+    configSA.terminated = true;
+    configSA.state = configSA.bestState;
+    for (size_t i = 0; i < observers.size(); i++)
+    {
+        observers[i]->notify(instance, configSA);
+    }
+
+    result = configSA.bestState;
+}
 // Simulated Annealing 
 void Optimizer::optimize(const TSPInstance& instance, std::vector<int> & result) const
 {
@@ -149,6 +284,132 @@ void Optimizer::optimize(const TSPInstance& instance, std::vector<int> & result)
 ////////////////////////////////////////////////////////////////////////////////
 /// RuntimeGUI
 ////////////////////////////////////////////////////////////////////////////////
+
+void RuntimeGUI::notify(const TSPInstance & instance, const Optimizer::ConfigSA & configSA)
+{
+    // The screen is split as follows:
+    // 75% points
+    // 25% status
+
+    // Clear the gui
+    gui = cv::Scalar(0);
+
+    // Get the status marker
+    int statusRow = 0.05 * gui.rows;
+    int statusCol = 0.75 * gui.cols;
+
+    // Write the status
+    std::stringstream ss;
+    // ss << "New Population = " << config.temp;
+    // cv::putText(    gui, 
+    //                 ss.str(), 
+    //                 cv::Point(statusRow, statusCol+15), 
+    //                 cv::FONT_HERSHEY_PLAIN, 
+    //                 0.9, 
+    //                 cv::Scalar(255,255,255));
+    // ss.str("");
+    ss << "Generation # = " << configSA.currentGenerationNumber;
+    cv::putText(    gui, 
+                    ss.str(), 
+                    cv::Point(statusRow, statusCol+30), 
+                    cv::FONT_HERSHEY_PLAIN, 
+                    0.9, 
+                    cv::Scalar(255,255,255));
+    ss.str("");
+    ss << "Current distance = " << configSA.energy;
+    cv::putText(    gui, 
+                    ss.str(), 
+                    cv::Point(statusRow, statusCol+45), 
+                    cv::FONT_HERSHEY_PLAIN, 
+                    0.9, 
+                    cv::Scalar(255,255,255));
+    ss.str("");
+    ss << "Shortest distance = " << configSA.bestEnergy;
+    cv::putText(    gui, 
+                    ss.str(), 
+                    cv::Point(statusRow, statusCol+60), 
+                    cv::FONT_HERSHEY_PLAIN, 
+                    0.9, 
+                    cv::Scalar(255,255,255));
+    ss.str("");
+
+    // Plot the charts
+    // [...]
+
+    // Plot the cities
+    // Determine the minimum and maximum X/Y
+    float minX = std::numeric_limits<float>::max();
+    float minY = std::numeric_limits<float>::max();
+    float maxX = std::numeric_limits<float>::min();
+    float maxY = std::numeric_limits<float>::min();
+
+    for (size_t i = 0; i < instance.getCities().size(); i++)
+    {
+        minX = std::min(minX, instance.getCities()[i].second);
+        minY = std::min(minY, instance.getCities()[i].first);
+        maxX = std::max(maxX, instance.getCities()[i].second);
+        maxY = std::max(maxY, instance.getCities()[i].first);
+    }
+
+    // Calculate the compression factor
+    float width = maxX - minX;
+    float height = maxY - minY;
+    float compression = (statusCol - 10)/width;
+    if (height*compression > gui.rows-10)
+    {
+        compression = (gui.rows-10)/height;
+    }
+
+    // Paint the best path
+    for (size_t i = 0; i < configSA.state.size(); i++)
+    {
+        cv::Point p1;
+        p1.x = (instance.getCities()[configSA.bestState[i%configSA.state.size()]].second - minX)* compression+5;
+        p1.y = (instance.getCities()[configSA.bestState[i%configSA.state.size()]].first - minY)* compression+5;
+        cv::Point p2;
+        p2.x = (instance.getCities()[configSA.bestState[(i+1)%configSA.state.size()]].second - minX)* compression+5;
+        p2.y = (instance.getCities()[configSA.bestState[(i+1)%configSA.state.size()]].first - minY)* compression+5;
+
+        cv::line(gui, p1, p2, cv::Scalar(0,255,255), 1, CV_AVX); // test: cv::LINE_AA
+    }
+    // Paint the current path
+    // for (size_t i = 0; i < configSA.state.size(); i++)
+    // {
+    //     cv::Point p1;
+    //     p1.x = (instance.getCities()[configSA.state[i%configSA.state.size()]].second - minX)* compression+5;
+    //     p1.y = (instance.getCities()[configSA.state[i%configSA.state.size()]].first - minY)* compression+5;
+    //     cv::Point p2;
+    //     p2.x = (instance.getCities()[configSA.state[(i+1)%configSA.state.size()]].second - minX)* compression+5;
+    //     p2.y = (instance.getCities()[configSA.state[(i+1)%configSA.state.size()]].first - minY)* compression+5;
+
+    //     cv::line(gui, p1, p2, cv::Scalar(255,0,255), 2, CV_AVX); // test: cv::LINE_AA
+    // }
+
+    // Paint the cities
+    for (size_t i = 0; i < instance.getCities().size(); i++)
+    {
+        cv::Point p1;
+        p1.x = (instance.getCities()[i].second - minX)* compression+5;
+        p1.y = (instance.getCities()[i].first - minY)* compression+5;
+
+        cv::circle(gui, p1, 2, cv::Scalar(200,200,200), 2);
+    }
+
+    cv::imshow("TSP", gui);
+
+    // auto energyPlot = CvPlot::plot(config.proposedEnergies);
+    // cv::Mat energyPlotMat = energyPlot.render(1000, 1500);
+    // cv::imshow("Energy Plot", energyPlotMat);
+
+    if (configSA.terminated)
+    {
+        cv::waitKey(0);
+    }
+    else
+    {
+        cv::waitKey(waitTime);
+    }
+}
 
 void RuntimeGUI::notify(const TSPInstance & instance, const Optimizer::Config & config)
 {
