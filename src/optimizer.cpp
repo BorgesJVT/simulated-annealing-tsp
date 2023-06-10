@@ -314,17 +314,20 @@ void RuntimeGUI::notify(const TSPInstance & instance, const Optimizer::ConfigSA 
     // Get the status marker
     int statusRow = 0.05 * gui.rows;
     int statusCol = 0.40 * gui.cols;
+    int line_xcoord = 120;
+    int line_ycoord = 15;
 
     // Write the status
+    // Beside Graph
     std::stringstream ss;
     ss << "Population: ";
     cv::putText(    gui, 
                 ss.str(), 
-                cv::Point(statusCol, statusRow), 
+                cv::Point(statusCol+line_xcoord, statusRow), 
                 cv::FONT_HERSHEY_PLAIN, 
                 0.9, 
-                cv::Scalar(255,255,255));
-    int line_ycoord = 15;
+                cv::Scalar(0,255,0));
+    
     for (auto tour : configSA.population) {
         ss.str("");
         for (auto e : tour) {
@@ -332,13 +335,15 @@ void RuntimeGUI::notify(const TSPInstance & instance, const Optimizer::ConfigSA 
         }
         cv::putText(    gui, 
                 ss.str(), 
-                cv::Point(statusCol, statusRow+line_ycoord), 
+                cv::Point(statusCol+line_xcoord, statusRow+line_ycoord), 
                 cv::FONT_HERSHEY_PLAIN, 
                 1.0, 
-                cv::Scalar(255,255,255));
-                line_ycoord = line_ycoord+15;
-        
+                cv::Scalar(0,255,0));
+        line_ycoord = line_ycoord+15;
+        if (line_ycoord > statusCol) break;
     }
+
+    // Below Graph
     ss.str("");
     ss << "Generation # = " << configSA.currentGenerationNumber;
     cv::putText(    gui, 
@@ -406,8 +411,10 @@ void RuntimeGUI::notify(const TSPInstance & instance, const Optimizer::ConfigSA 
     for (size_t i = 0; i < configSA.state.size(); i++)
     {
         cv::Point p1;
+        // std::cout << "Passou aqui!: " << (instance.getCities()[0].first - minY)*compression << '\n';
         p1.x = (instance.getCities()[configSA.bestState[i%configSA.state.size()]].second - minX)* compression+5;
         p1.y = (instance.getCities()[configSA.bestState[i%configSA.state.size()]].first - minY)* compression+5;
+        // std::cout << "Passou aqui!: " << (instance.getCities()[0].first - minY)*compression << '\n';
         cv::Point p2;
         p2.x = (instance.getCities()[configSA.bestState[(i+1)%configSA.state.size()]].second - minX)* compression+5;
         p2.y = (instance.getCities()[configSA.bestState[(i+1)%configSA.state.size()]].first - minY)* compression+5;

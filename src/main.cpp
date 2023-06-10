@@ -32,7 +32,7 @@ int main(int argc, const char** argv)
     // You can specify the dimensions of the window
     RuntimeGUI gui(800, 1600);
     // The time the GUI stops after each iterations. Set to 0 to wait for a keypress
-    gui.waitTime = 0;
+    gui.waitTime = 5;
     optimizer.addObserver(&gui);
 
 

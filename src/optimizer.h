@@ -17,8 +17,8 @@ public:
   class ConfigSA {
   public:
     ConfigSA()
-        : populationSize(10), population(populationSize), numGenerations(300),
-          currentGenerationNumber(0), energy(0), bestEnergy(10000),
+        : populationSize(1000), population(populationSize), numGenerations(500),
+          currentGenerationNumber(0), energy(0), bestEnergy(100000),
           terminated(false) {}
     /**
      * The population size
