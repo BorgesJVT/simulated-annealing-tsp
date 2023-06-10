@@ -21,7 +21,7 @@ int main(int argc, const char** argv)
     }
     else
     {
-        instance.createCircleOfCities(30);
+        instance.createCircleOfCities(10);
     }
     instance.calcDistanceMatrix();
     
@@ -30,9 +30,9 @@ int main(int argc, const char** argv)
     
     // Register the GUI
     // You can specify the dimensions of the window
-    RuntimeGUI gui(750, 750);
+    RuntimeGUI gui(800, 1600);
     // The time the GUI stops after each iterations. Set to 0 to wait for a keypress
-    gui.waitTime = 5;
+    gui.waitTime = 0;
     optimizer.addObserver(&gui);
 
 

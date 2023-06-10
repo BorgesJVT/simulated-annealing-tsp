@@ -41,7 +41,8 @@ std::vector<int> selection(const std::vector<std::vector<int>>& population, cons
     std::vector<int> selectedTour;
     double bestDistance = std::numeric_limits<double>::max();
 
-    for (int i = 0; i < 2; ++i) {
+    // Find random populations and check the best by using tournament selection
+    for (int i = 0; i < 10; ++i) {
         int index = dis(gen);
         const std::vector<int>& tour = population[index];
         double distance = instance.calcTourLength(tour);
@@ -51,6 +52,18 @@ std::vector<int> selection(const std::vector<std::vector<int>>& population, cons
         }
     }
 
+    // std::vector<double> distances;
+    // // Find the best (shortest path) in the population
+    // for (auto population : populations) {
+    //     distances.push_back(instance.calcTourLength(population));
+    // }
+    // int index;
+    // auto selectedTour = std::min_element(distances.begin(), distances.end());
+    // if (selectedTour != distances.end()) {
+    //     // Calculate the index of the minimum element
+    //     index = std::distance(distances.begin(), selectedTour);
+    // }
+    // return populations[index];
     return selectedTour;
 }
 
@@ -89,9 +102,9 @@ void Optimizer::optimize(const TSPInstance& instance, std::vector<int> & result,
     int numCities = static_cast<int>(instance.getCities().size());
 
     // Generate initial population
-    std::vector<std::vector<int>> population(configSA.populationSize);
+    // std::vector<std::vector<int>> population(configSA.populationSize);
     for (int i = 0; i < configSA.populationSize; ++i) {
-        population[i] = createRandomTour(numCities);
+        configSA.population[i] = createRandomTour(numCities);
     }
 
     // Main loop for the specified number of generations
@@ -101,32 +114,36 @@ void Optimizer::optimize(const TSPInstance& instance, std::vector<int> & result,
 
         // Perform selection, crossover, and mutation to create the new population
         for (int i = 0; i < configSA.populationSize; ++i) {
-            std::vector<int> parent1 = selection(population, instance);
-            std::vector<int> parent2 = selection(population, instance);
+            std::vector<int> parent1 = selection(configSA.population, instance);
+            std::vector<int> parent2 = selection(configSA.population, instance);
             std::vector<int> child = crossover(parent1, parent2);
             mutate(child);
             newPopulation[i] = child;
         }
 
         // Replace the current population with the new population
-        population = newPopulation;
+        configSA.population.clear();
+        configSA.population = newPopulation;
+        // std::move(v.begin(), v.end(), std::back_inserter(l));
         configSA.currentGenerationNumber = generation;
 
         // Find the best tour in the population
         double bestDistance = std::numeric_limits<double>::max();
         std::vector<int> bestTour;
-        for (const auto& tour : population) {
+        for (const auto& tour : configSA.population) {
             double distance = instance.calcTourLength(tour);
-            configSA.state = tour;
-            configSA.energy = distance;
             if (distance < bestDistance) {
                 bestDistance = distance;
                 bestTour = tour;
+                configSA.state = bestTour;
+                configSA.energy = bestDistance;
             }
         }
 
-        configSA.bestState = bestTour;
-        configSA.bestEnergy = bestDistance;
+        if (configSA.energy < configSA.bestEnergy) {
+            configSA.bestState = configSA.state;
+            configSA.bestEnergy = configSA.energy;
+        }
 
         // Should we notify the observers?
         for (size_t i = 0; i < observers.size(); i++)
@@ -296,40 +313,65 @@ void RuntimeGUI::notify(const TSPInstance & instance, const Optimizer::ConfigSA 
 
     // Get the status marker
     int statusRow = 0.05 * gui.rows;
-    int statusCol = 0.75 * gui.cols;
+    int statusCol = 0.40 * gui.cols;
 
     // Write the status
     std::stringstream ss;
-    // ss << "New Population = " << config.temp;
-    // cv::putText(    gui, 
-    //                 ss.str(), 
-    //                 cv::Point(statusRow, statusCol+15), 
-    //                 cv::FONT_HERSHEY_PLAIN, 
-    //                 0.9, 
-    //                 cv::Scalar(255,255,255));
-    // ss.str("");
+    ss << "Population: ";
+    cv::putText(    gui, 
+                ss.str(), 
+                cv::Point(statusCol, statusRow), 
+                cv::FONT_HERSHEY_PLAIN, 
+                0.9, 
+                cv::Scalar(255,255,255));
+    int line_ycoord = 15;
+    for (auto tour : configSA.population) {
+        ss.str("");
+        for (auto e : tour) {
+            ss << e << " ";
+        }
+        cv::putText(    gui, 
+                ss.str(), 
+                cv::Point(statusCol, statusRow+line_ycoord), 
+                cv::FONT_HERSHEY_PLAIN, 
+                1.0, 
+                cv::Scalar(255,255,255));
+                line_ycoord = line_ycoord+15;
+        
+    }
+    ss.str("");
     ss << "Generation # = " << configSA.currentGenerationNumber;
     cv::putText(    gui, 
                     ss.str(), 
                     cv::Point(statusRow, statusCol+30), 
                     cv::FONT_HERSHEY_PLAIN, 
-                    0.9, 
+                    1.2, 
                     cv::Scalar(255,255,255));
     ss.str("");
     ss << "Current distance = " << configSA.energy;
     cv::putText(    gui, 
                     ss.str(), 
-                    cv::Point(statusRow, statusCol+45), 
+                    cv::Point(statusRow, statusCol+60), 
                     cv::FONT_HERSHEY_PLAIN, 
-                    0.9, 
+                    1.2, 
                     cv::Scalar(255,255,255));
     ss.str("");
     ss << "Shortest distance = " << configSA.bestEnergy;
     cv::putText(    gui, 
                     ss.str(), 
-                    cv::Point(statusRow, statusCol+60), 
+                    cv::Point(statusRow, statusCol+90), 
                     cv::FONT_HERSHEY_PLAIN, 
-                    0.9, 
+                    1.2, 
+                    cv::Scalar(255,255,255));
+    ss.str("");
+    ss << "best state = [ ";
+    for (auto e : configSA.bestState) { ss << e << " "; }
+    ss << "]";
+    cv::putText(    gui, 
+                    ss.str(), 
+                    cv::Point(statusRow, statusCol+120), 
+                    cv::FONT_HERSHEY_PLAIN, 
+                    1.2, 
                     cv::Scalar(255,255,255));
     ss.str("");
 
