@@ -21,7 +21,7 @@ int main(int argc, const char** argv)
     }
     else
     {
-        instance.createCircleOfCities(10);
+        instance.createCircleOfCities(50);
     }
     instance.calcDistanceMatrix();
     
