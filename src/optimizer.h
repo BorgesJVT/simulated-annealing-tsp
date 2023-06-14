@@ -18,8 +18,8 @@ public:
   public:
     ConfigSA()
         : populationSize(1000), population(populationSize), numGenerations(500),
-          currentGenerationNumber(0), energy(0), bestEnergy(100000),
-          terminated(false) {}
+          currentGenerationNumber(0), energy(0), bestEnergy(std::numeric_limits<float>::max()),
+          candidatesForTournament(10), percentageForMutation(100), terminated(false) {}
     /**
      * The population size
      */
@@ -40,6 +40,14 @@ public:
      * The current generation in execution
      */
     int currentGenerationNumber;
+    /**
+     * The number of candidates for selection by tournament
+     */
+    int candidatesForTournament;
+    /**
+     * Must be an integer from 0 - 100 defining a percentage for mutation
+     */
+    int percentageForMutation;
     /**
      * The current distance
      */

@@ -24,13 +24,18 @@ std::vector<int> createRandomTour(int numCities) {
 }
 
 // Function to perform mutation by swapping two cities
-void mutate(std::vector<int> &tour) {
-  int numCities = tour.size();
+void mutate(std::vector<int> &tour, int percentageForMutation) {
+  // select a percentage for mutation
   std::mt19937 gen({std::random_device{}()});
-  std::uniform_int_distribution<> dis(0, numCities - 1);
-  int index1 = dis(gen);
-  int index2 = dis(gen);
-  std::swap(tour[index1], tour[index2]);
+  std::uniform_int_distribution<> dis(0, 100);
+  if (dis(gen) > percentageForMutation) return;
+
+  int numCities = tour.size();
+  std::uniform_int_distribution<> dis_cities(0, numCities - 1);
+  int index1 = dis_cities(gen);
+  int index2 = dis_cities(gen);
+  // std::swap(tour[index1], tour[index2]);
+  std::reverse(tour.begin() + index1, tour.begin() + index2);
 }
 
 // Function to perform selection using tournament selection
@@ -116,21 +121,17 @@ void Optimizer::optimize(const TSPInstance &instance, std::vector<int> &result,
 
     // Perform selection, crossover, and mutation to create the new population
     for (int i = 0; i < configSA.populationSize; ++i) {
-      std::vector<int> parent1 = selection(configSA.population, instance, 10);
-      std::vector<int> parent2 = selection(configSA.population, instance, 10);
+      std::vector<int> parent1 = selection(configSA.population, instance,
+                                           configSA.candidatesForTournament);
+      std::vector<int> parent2 = selection(configSA.population, instance,
+                                           configSA.candidatesForTournament);
       std::vector<int> child = crossover(parent1, parent2);
-
-      std::mt19937 gen({std::random_device{}()});
-      std::uniform_int_distribution<> dis(0, 100);
-      if (dis(gen) < 100) { // select a percentage for mutation
-        mutate(child);
-      }
+      mutate(child, configSA.percentageForMutation);
       newPopulation[i] = child;
     }
 
     // Replace the current population with the new population
     configSA.population.clear();
-    // configSA.population = newPopulation;
     std::move(newPopulation.begin(), newPopulation.end(),
               std::back_inserter(configSA.population));
     configSA.currentGenerationNumber = generation;
@@ -386,35 +387,64 @@ void RuntimeGUI::notify(const TSPInstance &instance,
   for (size_t i = 0; i < configSA.state.size(); i++) {
     cv::Point p1;
     p1.x = (instance.getCities()[configSA.bestState[i % configSA.state.size()]]
-                .second - minX) * compression + 5;
+                .second -
+            minX) *
+               compression +
+           5;
     p1.y = (instance.getCities()[configSA.bestState[i % configSA.state.size()]]
-                .first - minY) * compression + 5;
+                .first -
+            minY) *
+               compression +
+           5;
     cv::Point p2;
-    p2.x = (instance.getCities()[configSA.bestState[(i + 1) % configSA.state.size()]]
-             .second - minX) * compression + 5;
-    p2.y = (instance.getCities()[configSA.bestState[(i + 1) % configSA.state.size()]]
-             .first - minY) * compression + 5;
+    p2.x =
+        (instance
+             .getCities()[configSA.bestState[(i + 1) % configSA.state.size()]]
+             .second -
+         minX) *
+            compression +
+        5;
+    p2.y =
+        (instance
+             .getCities()[configSA.bestState[(i + 1) % configSA.state.size()]]
+             .first -
+         minY) *
+            compression +
+        5;
 
     cv::line(gui, p1, p2, cv::Scalar(0, 255, 255), 1,
              CV_AVX); // test: cv::LINE_AA
   }
   // Paint the current path
-  // for (size_t i = 0; i < configSA.state.size(); i++)
-  // {
-  //     cv::Point p1;
-  //     p1.x =
-  //     (instance.getCities()[configSA.state[i%configSA.state.size()]].second -
-  //     minX)* compression+5; p1.y =
-  //     (instance.getCities()[configSA.state[i%configSA.state.size()]].first -
-  //     minY)* compression+5; cv::Point p2; p2.x =
-  //     (instance.getCities()[configSA.state[(i+1)%configSA.state.size()]].second
-  //     - minX)* compression+5; p2.y =
-  //     (instance.getCities()[configSA.state[(i+1)%configSA.state.size()]].first
-  //     - minY)* compression+5;
+  for (size_t i = 0; i < configSA.state.size(); i++) {
+    cv::Point p1;
+    p1.x = (instance.getCities()[configSA.state[i % configSA.state.size()]]
+                .second -
+            minX) *
+               compression +
+           5;
+    p1.y =
+        (instance.getCities()[configSA.state[i % configSA.state.size()]].first -
+         minY) *
+            compression +
+        5;
+    cv::Point p2;
+    p2.x =
+        (instance.getCities()[configSA.state[(i + 1) % configSA.state.size()]]
+             .second -
+         minX) *
+            compression +
+        5;
+    p2.y =
+        (instance.getCities()[configSA.state[(i + 1) % configSA.state.size()]]
+             .first -
+         minY) *
+            compression +
+        5;
 
-  //     cv::line(gui, p1, p2, cv::Scalar(255,0,255), 2, CV_AVX); // test:
-  //     cv::LINE_AA
-  // }
+    cv::line(gui, p1, p2, cv::Scalar(255, 0, 255), 2,
+             CV_AVX); // test:cv::LINE_AA
+  }
 
   // Paint the cities
   for (size_t i = 0; i < instance.getCities().size(); i++) {
