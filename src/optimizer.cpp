@@ -122,9 +122,9 @@ void Optimizer::optimize(const TSPInstance &instance, std::vector<int> &result,
     // Perform selection, crossover, and mutation to create the new population
     for (int i = 0; i < configSA.populationSize; ++i) {
       std::vector<int> parent1 = selection(configSA.population, instance,
-                                           configSA.candidatesForTournament);
+                                           configSA.competitorsInTournament);
       std::vector<int> parent2 = selection(configSA.population, instance,
-                                           configSA.candidatesForTournament);
+                                           configSA.competitorsInTournament);
       std::vector<int> child = crossover(parent1, parent2);
       mutate(child, configSA.percentageForMutation);
       newPopulation[i] = child;
@@ -136,11 +136,14 @@ void Optimizer::optimize(const TSPInstance &instance, std::vector<int> &result,
               std::back_inserter(configSA.population));
     configSA.currentGenerationNumber = generation;
 
-    // Find the best tour in the population
+    // Find the best tour in the population and save all distances
     double bestDistance = std::numeric_limits<double>::max();
     std::vector<int> bestTour;
-    for (const auto &tour : configSA.population) {
+    // TODO(BORGES): Verify possibility of integrating this loop into the last one
+    for (int i = 0; i<configSA.populationSize; ++i) {
+      auto tour = configSA.population[i];
       double distance = instance.calcTourLength(tour);
+      configSA.populationEnergies[i] = distance;
       if (distance < bestDistance) {
         bestDistance = distance;
         bestTour = tour;
@@ -153,6 +156,10 @@ void Optimizer::optimize(const TSPInstance &instance, std::vector<int> &result,
       configSA.bestState = configSA.state;
       configSA.bestEnergy = configSA.energy;
     }
+
+    // Calculate the average of the population energies
+    double avg = ConfigSA::average(configSA.populationEnergies);
+    configSA.averagesPopulationEnergies.push_back(avg);
 
     // Should we notify the observers?
     for (size_t i = 0; i < observers.size(); i++) {
@@ -357,6 +364,9 @@ void RuntimeGUI::notify(const TSPInstance &instance,
   cv::putText(gui, ss.str(), cv::Point(statusRow, statusCol + 120),
               cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(255, 255, 255));
   ss.str("");
+  // ss << "Average of the population distances: " << configSA.avgPopulationEnergies;
+  // cv::putText(gui, ss.str(), cv::Point(statusRow, statusCol + 150),
+  //             cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(255, 255, 255));
 
   // Plot the charts
   // [...]
@@ -457,9 +467,9 @@ void RuntimeGUI::notify(const TSPInstance &instance,
 
   cv::imshow("TSP", gui);
 
-  // auto energyPlot = CvPlot::plot(config.proposedEnergies);
-  // cv::Mat energyPlotMat = energyPlot.render(1000, 1500);
-  // cv::imshow("Energy Plot", energyPlotMat);
+  auto energyPlot = CvPlot::plot(configSA.averagesPopulationEnergies);
+  cv::Mat energyPlotMat = energyPlot.render(500, 1000);
+  cv::imshow("Energy Plot", energyPlotMat);
 
   if (configSA.terminated) {
     cv::waitKey(0);

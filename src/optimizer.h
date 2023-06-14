@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <opencv2/opencv.hpp>
 #include <random>
+#include <numeric>
 
 #include "tsp.h"
 
@@ -17,9 +18,21 @@ public:
   class ConfigSA {
   public:
     ConfigSA()
-        : populationSize(1000), population(populationSize), numGenerations(500),
-          currentGenerationNumber(0), energy(0), bestEnergy(std::numeric_limits<float>::max()),
-          candidatesForTournament(10), percentageForMutation(100), terminated(false) {}
+        : populationSize(1000), population(populationSize),
+          populationEnergies(populationSize), numGenerations(500),
+          currentGenerationNumber(0), energy(0),
+          bestEnergy(std::numeric_limits<float>::max()),
+          competitorsInTournament(3), percentageForMutation(100),
+          terminated(false) {}
+    
+    /**
+     * Calculate the average of the population tours
+     */
+    static double average(std::vector<double> v) {
+      if (v.empty())
+        return 0;
+      return std::reduce(v.begin(), v.end()) / static_cast<double>(v.size());
+    }
     /**
      * The population size
      */
@@ -28,6 +41,14 @@ public:
      * The population
      */
     std::vector<std::vector<int>> population;
+    /**
+     * The population distances
+     */
+    std::vector<double> populationEnergies;
+    /**
+     * The averages of the population distances
+     */
+    std::vector<double> averagesPopulationEnergies;
     /**
      * The best tour index
      */
@@ -41,9 +62,9 @@ public:
      */
     int currentGenerationNumber;
     /**
-     * The number of candidates for selection by tournament
+     * The number of competitors for selection by tournament
      */
-    int candidatesForTournament;
+    int competitorsInTournament;
     /**
      * Must be an integer from 0 - 100 defining a percentage for mutation
      */
