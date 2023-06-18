@@ -19,10 +19,10 @@ public:
   public:
     ConfigSA()
         : populationSize(1000), population(populationSize),
-          populationEnergies(populationSize), numGenerations(500),
+          populationEnergies(populationSize), numGenerations(300),
           currentGenerationNumber(0), energy(0),
           bestEnergy(std::numeric_limits<float>::max()),
-          competitorsInTournament(3), percentageForMutation(100),
+          competitorsInTournament(10), percentageForMutation(100),
           terminated(false) {}
     
     /**

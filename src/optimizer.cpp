@@ -24,7 +24,7 @@ std::vector<int> createRandomTour(int numCities) {
 }
 
 // Function to perform mutation by swapping two cities
-void mutate(std::vector<int> &tour, int percentageForMutation) {
+void mutate(std::vector<int> &tour, int percentageForMutation, std::string type) {
   // select a percentage for mutation
   std::mt19937 gen({std::random_device{}()});
   std::uniform_int_distribution<> dis(0, 100);
@@ -34,8 +34,8 @@ void mutate(std::vector<int> &tour, int percentageForMutation) {
   std::uniform_int_distribution<> dis_cities(0, numCities - 1);
   int index1 = dis_cities(gen);
   int index2 = dis_cities(gen);
-  // std::swap(tour[index1], tour[index2]);
-  std::reverse(tour.begin() + index1, tour.begin() + index2);
+  if (type == "swap") std::swap(tour[index1], tour[index2]);
+  else if (type == "reverse") std::reverse(tour.begin() + index1, tour.begin() + index2);
 }
 
 // Function to perform selection using tournament selection
@@ -126,7 +126,9 @@ void Optimizer::optimize(const TSPInstance &instance, std::vector<int> &result,
       std::vector<int> parent2 = selection(configSA.population, instance,
                                            configSA.competitorsInTournament);
       std::vector<int> child = crossover(parent1, parent2);
-      mutate(child, configSA.percentageForMutation);
+      std::string type = "reverse";
+      // if (generation > 50) type = "swap";
+      mutate(child, configSA.percentageForMutation, type);
       newPopulation[i] = child;
     }
 
@@ -325,22 +327,22 @@ void RuntimeGUI::notify(const TSPInstance &instance,
   // Write the status
   // Beside Graph
   std::stringstream ss;
-  ss << "Population: ";
-  cv::putText(gui, ss.str(), cv::Point(statusCol + line_xcoord, statusRow),
-              cv::FONT_HERSHEY_PLAIN, 0.9, cv::Scalar(0, 255, 0));
+  // ss << "Population: ";
+  // cv::putText(gui, ss.str(), cv::Point(statusCol + line_xcoord, statusRow),
+  //             cv::FONT_HERSHEY_PLAIN, 0.9, cv::Scalar(0, 255, 0));
 
-  for (auto tour : configSA.population) {
-    ss.str("");
-    for (auto e : tour) {
-      ss << e << " ";
-    }
-    cv::putText(gui, ss.str(),
-                cv::Point(statusCol + line_xcoord, statusRow + line_ycoord),
-                cv::FONT_HERSHEY_PLAIN, 1.0, cv::Scalar(0, 255, 0));
-    line_ycoord = line_ycoord + 15;
-    if (line_ycoord > statusCol)
-      break;
-  }
+  // for (auto tour : configSA.population) {
+  //   ss.str("");
+  //   for (auto e : tour) {
+  //     ss << e << " ";
+  //   }
+  //   cv::putText(gui, ss.str(),
+  //               cv::Point(statusCol + line_xcoord, statusRow + line_ycoord),
+  //               cv::FONT_HERSHEY_PLAIN, 1.0, cv::Scalar(0, 255, 0));
+  //   line_ycoord = line_ycoord + 15;
+  //   if (line_ycoord > statusCol)
+  //     break;
+  // }
 
   // Below Graph
   ss.str("");
