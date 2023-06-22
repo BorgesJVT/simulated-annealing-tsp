@@ -4,12 +4,44 @@
 /// Optimizer
 ////////////////////////////////////////////////////////////////////////////////
 
-// Brute force Dynamic Programming
-// void Optimizer::optimize(const TSPInstance& instance, std::vector<int> &
-// result, std::string brute_force) const
-// {
+// Function to generate all possible permutations of cities
+std::vector<std::vector<int>> generatePermutations(std::vector<int> cities)
+{
+    std::vector<std::vector<int>> permutations;
+    do {
+        permutations.push_back(cities);
+    } while (std::next_permutation(cities.begin() + 1, cities.end()));
+    return permutations;
+}
 
-// }
+// Brute force Dynamic Programming
+void Optimizer::optimize(const TSPInstance& instance, std::vector<int> &
+result, std::string brute_force) const
+{
+    // Get the number of cities
+    int numCities = static_cast<int>(instance.getCities().size());
+
+    // Generate all possible permutations of cities
+    std::vector<int> cities(numCities);
+    for (int i = 0; i < numCities; ++i) {
+        cities[i] = i;
+    }
+    std::vector<std::vector<int>> allTours = generatePermutations(cities);
+
+    // Find the permutation with the minimum tour length
+    float minTourLength = std::numeric_limits<float>::max();
+    std::vector<int> optimalTour;
+
+    for (const auto& tour : allTours) {
+        float tourLength = instance.calcTourLength(tour);
+        if (tourLength < minTourLength) {
+            minTourLength = tourLength;
+            optimalTour = tour;
+        }
+    }
+
+    std::cout << "Optimal tour length: " << minTourLength << std::endl;
+}
 
 /* SIMPLE GENETIC ALGORITHM */
 // Function to create a random tour
@@ -58,18 +90,6 @@ std::vector<int> selection(const std::vector<std::vector<int>> &population,
     }
   }
 
-  // std::vector<double> distances;
-  // // Find the best (shortest path) in the population
-  // for (auto population : populations) {
-  //     distances.push_back(instance.calcTourLength(population));
-  // }
-  // int index;
-  // auto selectedTour = std::min_element(distances.begin(), distances.end());
-  // if (selectedTour != distances.end()) {
-  //     // Calculate the index of the minimum element
-  //     index = std::distance(distances.begin(), selectedTour);
-  // }
-  // return populations[index];
   return selectedTour;
 }
 
@@ -100,84 +120,83 @@ std::vector<int> crossover(const std::vector<int> &parent1,
   return child;
 }
 
-void Optimizer::optimize(const TSPInstance &instance, std::vector<int> &result,
-                         std::string geneticAlgorithm) const {
-  // Set up the runtime configuration
-  ConfigSA configSA;
+// void Optimizer::optimize(const TSPInstance &instance, std::vector<int> &result,
+//                          std::string geneticAlgorithm) const {
+//   // Set up the runtime configuration
+//   ConfigSA configSA;
 
-  // Get the number of cities
-  int numCities = static_cast<int>(instance.getCities().size());
+//   // Get the number of cities
+//   int numCities = static_cast<int>(instance.getCities().size());
 
-  // Generate initial population
-  // std::vector<std::vector<int>> population(configSA.populationSize);
-  for (int i = 0; i < configSA.populationSize; ++i) {
-    configSA.population[i] = createRandomTour(numCities);
-  }
+//   // Generate initial population
+//   // std::vector<std::vector<int>> population(configSA.populationSize);
+//   for (int i = 0; i < configSA.populationSize; ++i) {
+//     configSA.population[i] = createRandomTour(numCities);
+//   }
 
-  // Main loop for the specified number of generations
-  for (int generation = 0; generation < configSA.numGenerations; ++generation) {
-    // Create a new population for the next generation
-    std::vector<std::vector<int>> newPopulation(configSA.populationSize);
+//   // Main loop for the specified number of generations
+//   for (int generation = 0; generation < configSA.numGenerations; ++generation) {
+//     // Create a new population for the next generation
+//     std::vector<std::vector<int>> newPopulation(configSA.populationSize);
 
-    // Perform selection, crossover, and mutation to create the new population
-    for (int i = 0; i < configSA.populationSize; ++i) {
-      std::vector<int> parent1 = selection(configSA.population, instance,
-                                           configSA.competitorsInTournament);
-      std::vector<int> parent2 = selection(configSA.population, instance,
-                                           configSA.competitorsInTournament);
-      std::vector<int> child = crossover(parent1, parent2);
-      std::string type = "reverse";
-      // if (generation > 50) type = "swap";
-      mutate(child, configSA.percentageForMutation, type);
-      newPopulation[i] = child;
-    }
+//     // Perform selection, crossover, and mutation to create the new population
+//     for (int i = 0; i < configSA.populationSize; ++i) {
+//       std::vector<int> parent1 = selection(configSA.population, instance,
+//                                            configSA.competitorsInTournament);
+//       std::vector<int> parent2 = selection(configSA.population, instance,
+//                                            configSA.competitorsInTournament);
+//       std::vector<int> child = crossover(parent1, parent2);
+//       std::string type = "reverse"; // swap
+//       mutate(child, configSA.percentageForMutation, type);
+//       newPopulation[i] = child;
+//     }
 
-    // Replace the current population with the new population
-    configSA.population.clear();
-    std::move(newPopulation.begin(), newPopulation.end(),
-              std::back_inserter(configSA.population));
-    configSA.currentGenerationNumber = generation;
+//     // Replace the current population with the new population
+//     configSA.population.clear();
+//     std::move(newPopulation.begin(), newPopulation.end(),
+//               std::back_inserter(configSA.population));
+//     configSA.currentGenerationNumber = generation;
 
-    // Find the best tour in the population and save all distances
-    double bestDistance = std::numeric_limits<double>::max();
-    std::vector<int> bestTour;
-    // TODO(BORGES): Verify possibility of integrating this loop into the last one
-    for (int i = 0; i<configSA.populationSize; ++i) {
-      auto tour = configSA.population[i];
-      double distance = instance.calcTourLength(tour);
-      configSA.populationEnergies[i] = distance;
-      if (distance < bestDistance) {
-        bestDistance = distance;
-        bestTour = tour;
-        configSA.state = bestTour;
-        configSA.energy = bestDistance;
-      }
-    }
+//     // Find the best tour in the population and save all distances
+//     double bestDistance = std::numeric_limits<double>::max();
+//     std::vector<int> bestTour;
+//     // TODO(BORGES): Verify possibility of integrating this loop into the last one
+//     for (int i = 0; i<configSA.populationSize; ++i) {
+//       auto tour = configSA.population[i];
+//       double distance = instance.calcTourLength(tour);
+//       configSA.populationEnergies[i] = distance;
+//       if (distance < bestDistance) {
+//         bestDistance = distance;
+//         bestTour = tour;
+//         configSA.state = bestTour;
+//         configSA.energy = bestDistance;
+//       }
+//     }
 
-    if (configSA.energy < configSA.bestEnergy) {
-      configSA.bestState = configSA.state;
-      configSA.bestEnergy = configSA.energy;
-    }
+//     if (configSA.energy < configSA.bestEnergy) {
+//       configSA.bestState = configSA.state;
+//       configSA.bestEnergy = configSA.energy;
+//     }
 
-    // Calculate the average of the population energies
-    double avg = ConfigSA::average(configSA.populationEnergies);
-    configSA.averagesPopulationEnergies.push_back(avg);
+//     // Calculate the average of the population energies
+//     double avg = ConfigSA::average(configSA.populationEnergies);
+//     configSA.averagesPopulationEnergies.push_back(avg);
 
-    // Should we notify the observers?
-    for (size_t i = 0; i < observers.size(); i++) {
-      observers[i]->notify(instance, configSA);
-    }
-  }
+//     // Should we notify the observers?
+//     for (size_t i = 0; i < observers.size(); i++) {
+//       observers[i]->notify(instance, configSA);
+//     }
+//   }
 
-  // Do the final notification
-  configSA.terminated = true;
-  configSA.state = configSA.bestState;
-  for (size_t i = 0; i < observers.size(); i++) {
-    observers[i]->notify(instance, configSA);
-  }
+//   // Do the final notification
+//   configSA.terminated = true;
+//   configSA.state = configSA.bestState;
+//   for (size_t i = 0; i < observers.size(); i++) {
+//     observers[i]->notify(instance, configSA);
+//   }
 
-  result = configSA.bestState;
-}
+//   result = configSA.bestState;
+// }
 // Simulated Annealing
 void Optimizer::optimize(const TSPInstance &instance,
                          std::vector<int> &result) const {
@@ -469,9 +488,9 @@ void RuntimeGUI::notify(const TSPInstance &instance,
 
   cv::imshow("TSP", gui);
 
-  auto energyPlot = CvPlot::plot(configSA.averagesPopulationEnergies);
-  cv::Mat energyPlotMat = energyPlot.render(500, 1000);
-  cv::imshow("Energy Plot", energyPlotMat);
+  // auto energyPlot = CvPlot::plot(configSA.averagesPopulationEnergies);
+  // cv::Mat energyPlotMat = energyPlot.render(500, 1000);
+  // cv::imshow("Energy Plot", energyPlotMat);
 
   if (configSA.terminated) {
     cv::waitKey(0);
@@ -618,9 +637,9 @@ void RuntimeGUI::notify(const TSPInstance &instance,
 
   cv::imshow("TSP", gui);
 
-  auto energyPlot = CvPlot::plot(config.proposedEnergies);
-  cv::Mat energyPlotMat = energyPlot.render(1000, 1500);
-  cv::imshow("Energy Plot", energyPlotMat);
+  // auto energyPlot = CvPlot::plot(config.proposedEnergies);
+  // cv::Mat energyPlotMat = energyPlot.render(1000, 1500);
+  // cv::imshow("Energy Plot", energyPlotMat);
 
   if (config.terminated) {
     cv::waitKey(0);

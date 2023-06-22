@@ -21,7 +21,7 @@ int main(int argc, const char** argv)
     }
     else
     {
-        instance.createCircleOfCities(30);
+        instance.createCircleOfCities(12);
     }
     instance.calcDistanceMatrix();
     
@@ -54,7 +54,7 @@ int main(int argc, const char** argv)
     // Run the program
     std::vector<int> result;
     // optimizer.optimize(instance, result);
-    optimizer.optimize(instance, result, "SGA");
+    optimizer.optimize(instance, result, "brute_force");
     
     return 0;
 }

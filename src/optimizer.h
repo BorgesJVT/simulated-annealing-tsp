@@ -1,7 +1,7 @@
 #ifndef OPTIMIZER_H
 #define OPTIMIZER_H
 
-#include <CvPlot/cvplot.h>
+// #include <CvPlot/cvplot.h>
 #include <algorithm>
 #include <opencv2/opencv.hpp>
 #include <random>
@@ -31,7 +31,7 @@ public:
     static double average(std::vector<double> v) {
       if (v.empty())
         return 0;
-      return std::reduce(v.begin(), v.end()) / static_cast<double>(v.size());
+      return std::accumulate(v.begin(), v.end(), 0) / static_cast<double>(v.size());
     }
     /**
      * The population size
