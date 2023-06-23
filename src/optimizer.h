@@ -6,6 +6,7 @@
 #include <opencv2/opencv.hpp>
 #include <random>
 #include <numeric>
+#include <thread>
 
 #include "tsp.h"
 

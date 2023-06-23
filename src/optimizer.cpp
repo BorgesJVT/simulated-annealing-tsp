@@ -21,6 +21,9 @@ result, std::string brute_force) const
     // Get the number of cities
     int numCities = static_cast<int>(instance.getCities().size());
 
+    // Set up the runtime configuration
+    Config configBF;
+
     // Generate all possible permutations of cities
     std::vector<int> cities(numCities);
     for (int i = 0; i < numCities; ++i) {
@@ -38,6 +41,12 @@ result, std::string brute_force) const
             minTourLength = tourLength;
             optimalTour = tour;
         }
+        // Notify observers
+        configBF.state = tour;
+        configBF.energy = tourLength;
+        configBF.bestEnergy = minTourLength;
+        configBF.bestState = optimalTour;
+        observers[0]->notify(instance, configBF);
     }
 
     std::cout << "Optimal tour length: " << minTourLength << std::endl;
