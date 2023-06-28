@@ -1,4 +1,4 @@
-#include "optimizer.h"
+#include "ga_optimizer.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Simple Genetic Algorithm Optimizer
@@ -11,6 +11,17 @@ double average(std::vector<double> v) {
   if (v.empty())
     return 0;
   return std::accumulate(v.begin(), v.end(), 0) / static_cast<double>(v.size());
+}
+
+// Function to create a random tour
+std::vector<int> createRandomTour(int numCities) {
+  std::vector<int> tour(numCities);
+  for (int i = 0; i < numCities; ++i) {
+    tour[i] = i;
+  }
+  std::mt19937 gen({std::random_device{}()});
+  shuffle(tour.begin(), tour.end(), gen);
+  return tour;
 }
 
 // Function to perform mutation by swapping two cities
@@ -78,7 +89,7 @@ std::vector<int> crossover(const std::vector<int> &parent1,
   return child;
 }
 
-void GAOptimizer::optimize(const TSPInstance &instance, std::vector<int> &result) const {
+void GAOptimizer::optimize(const TSPInstance &instance, std::vector<int> &result) {
   // Get the number of cities
   int numCities = static_cast<int>(instance.getCities().size());
 
@@ -137,8 +148,8 @@ void GAOptimizer::optimize(const TSPInstance &instance, std::vector<int> &result
     averagesPopulationEnergies_.push_back(avg);
 
     // Should we notify the observers?
-    for (size_t i = 0; i < observers.size(); ++i) {
-      observers_[i]->notify(instance, this);
+    for (size_t i = 0; i < observers_.size(); ++i) {
+      observers_[i]->notify(instance, *this);
     }
   }
 
@@ -146,7 +157,7 @@ void GAOptimizer::optimize(const TSPInstance &instance, std::vector<int> &result
   terminated_ = true;
   state_ = bestState_;
   for (size_t i = 0; i < observers_.size(); ++i) {
-    observers_[i]->notify(instance, this);
+    observers_[i]->notify(instance, *this);
   }
 
   result = bestState_;

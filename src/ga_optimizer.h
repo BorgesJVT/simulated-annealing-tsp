@@ -50,12 +50,10 @@ public:
    * Constructor
    */
   GAOptimizer()
-      : populationSize_(1000), population_(populationSize),
+      : populationSize_(1000), population_(populationSize_),
         populationEnergies_(populationSize_), numGenerations_(300),
-        currentGenerationNumber_(0), energy_(0),
-        bestEnergy_(std::numeric_limits<float>::max()),
-        competitorsInTournament_(10), percentageForMutation_(100),
-        terminated_(false) {}
-  void optimize(const TSPInstance &instance, std::vector<int> &result) const override;
+        currentGenerationNumber_(0), competitorsInTournament_(10),
+        percentageForMutation_(100) {}
+  void optimize(const TSPInstance &instance, std::vector<int> &result) override;
 }; // end of GAOptimizer class
 #endif

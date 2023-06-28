@@ -7,8 +7,8 @@
 #include <thread>
 
 #include "tsp.h"
+#include "runtimegui.h"
 
-class Observer;
 /**
  * The class Optimizer implements a basic Brute Force algorithm
  * testing all possible tour with an exponential algorithimic complexity.
@@ -55,7 +55,7 @@ public:
    * Adds an observer
    */
   void addObserver(Observer *observer) { observers_.push_back(observer); }
-private:
+protected:
   /**
    * A list of observers
    */

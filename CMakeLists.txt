@@ -20,6 +20,8 @@ add_executable(solving_tsp
   src/main.cpp 
   src/tsp.cpp 
   src/optimizer.cpp
+  # src/sa_optimizer.cpp
+  src/ga_optimizer.cpp
   src/runtimegui.cpp
 )
 

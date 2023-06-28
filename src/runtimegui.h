@@ -4,9 +4,9 @@
 #include <opencv2/opencv.hpp>
 // #include <CvPlot/cvplot.h>
 
-#include "optimizer.h"
 #include "tsp.h"
 
+class Optimizer;
 /**
  * This class implements an observer for the optimizer. The observers can
  * watch the optimization process

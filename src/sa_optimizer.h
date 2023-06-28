@@ -64,13 +64,13 @@ public:
     /**
      * Sets the move service
      */
-    void setMoveService(MoveService *_service) { service = _service; }
+    void setMoveService(MoveService *service) { service_ = service; }
 
   protected:
     /**
      * The move service
      */
-    MoveService *service;
+    MoveService *service_;
   };
   /**
    * The current proposed energy (this variable is just for plotting in GUI).
@@ -119,20 +119,17 @@ public:
   SAOptimizer()
       : coolingSchedule_(0), outerLoops_(100), innerLoops_(1000),
         notificationCycle_(250) {}
-  /**
-   * Runs the optimizer on a specific problem instance using Simulated Annealing
-   */
-  void optimize(const TSPInstance &instance, std::vector<int> &result) const override;
+  void optimize(const TSPInstance &instance, std::vector<int> &result) override;
   /**
    * Adds a move
    */
-  void addMove(Move *move) { moves.push_back(move); }
+  void addMove(Move *move) { moves_.push_back(move); }
 }; // end of SAOptimizer class
 
 /**
  * This is a geometric cooling schedule
  */
-class GeometricCoolingSchedule : public Optimizer::CoolingSchedule {
+class GeometricCoolingSchedule : public SAOptimizer::CoolingSchedule {
 public:
   /**
    * Constructor
@@ -170,42 +167,42 @@ private:
 /**
  * This move reverses the order of a chain
  */
-class ChainReverseMove : public Optimizer::Move {
+class ChainReverseMove : public SAOptimizer::Move {
 public:
   /**
    * Computes a random neighbor according to some move strategy
    */
   virtual void propose(std::vector<int> &state) const {
     // Sample two random cities and reverse the chain
-    std::reverse(state.begin() + service->sample(),
-                 state.begin() + service->sample());
+    std::reverse(state.begin() + service_->sample(),
+                 state.begin() + service_->sample());
   }
 };
 
 /**
  * This move exchanges two cities in the current path
  */
-class SwapCityMove : public Optimizer::Move {
+class SwapCityMove : public SAOptimizer::Move {
 public:
   /**
    * Computes a random neighbor according to some move strategy
    */
   virtual void propose(std::vector<int> &state) const {
-    std::swap(state[service->sample()], state[service->sample()]);
+    std::swap(state[service_->sample()], state[service_->sample()]);
   }
 };
 
 /**
  * This move rotates the current path
  */
-class RotateCityMove : public Optimizer::Move {
+class RotateCityMove : public SAOptimizer::Move {
 public:
   /**
    * Computes a random neighbor according to some move strategy
    */
   virtual void propose(std::vector<int> &state) const {
     std::vector<int> c(
-        {service->sample(), service->sample(), service->sample()});
+        {service_->sample(), service_->sample(), service_->sample()});
     std::sort(c.begin(), c.end());
 
     std::rotate(state.begin() + c[0], state.begin() + c[1],

@@ -1,4 +1,4 @@
-#include "optimizer.h"
+#include "sa_optimizer.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Simulated Annealing Optimizer
@@ -6,13 +6,13 @@
 
 
 void SAOptimizer::optimize(const TSPInstance &instance,
-                         std::vector<int> &result) const {
+                         std::vector<int> &result) {
   // Get the number of cities
   int n = static_cast<int>(instance.getCities().size());
 
   assert(n > 0);
   // There has to be at least one move for the optimization to work
-  assert(moves.size() > 0);
+  assert(moves_.size() > 0);
 
   // Set up some initial tour
   state_.resize(n);
@@ -39,7 +39,7 @@ void SAOptimizer::optimize(const TSPInstance &instance,
   std::uniform_real_distribution<float> uniformDist(0.0f, 1.0f);
 
   // Set up the mover service
-  Optimizer::MoveService *service = new Optimizer::MoveService(n);
+  SAOptimizer::MoveService *service = new SAOptimizer::MoveService(n);
   for (size_t i = 0; i < moves_.size(); i++) {
     moves_[i]->setMoveService(service);
   }
@@ -95,7 +95,7 @@ void SAOptimizer::optimize(const TSPInstance &instance,
       if ((loopCounter % notificationCycle_) == 0) {
         // Yes, we should
         for (size_t i = 0; i < observers_.size(); ++i) {
-          observers_[i]->notify(instance, this);
+          observers_[i]->notify(instance, *this);
         }
       }
       loopCounter++;
@@ -124,6 +124,6 @@ void SAOptimizer::optimize(const TSPInstance &instance,
   state_ = bestState_;
   energy_ = bestEnergy_;
   for (size_t i = 0; i < observers_.size(); ++i) {
-    observers_[i]->notify(instance, this);
+    observers_[i]->notify(instance, *this);
   }
 }
