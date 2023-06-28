@@ -1,411 +1,65 @@
 #ifndef OPTIMIZER_H
 #define OPTIMIZER_H
 
-// #include <CvPlot/cvplot.h>
 #include <algorithm>
-#include <opencv2/opencv.hpp>
-#include <random>
 #include <numeric>
+#include <random>
 #include <thread>
 
 #include "tsp.h"
 
+class Observer;
 /**
- * This is the optimizer. It implements the basic simulated annealing algorithm
- * and several neighborhood moves.
+ * The class Optimizer implements a basic Brute Force algorithm
+ * testing all possible tour with an exponential algorithimic complexity.
  */
 class Optimizer {
 public:
-  class ConfigSA {
-  public:
-    ConfigSA()
-        : populationSize(1000), population(populationSize),
-          populationEnergies(populationSize), numGenerations(300),
-          currentGenerationNumber(0), energy(0),
-          bestEnergy(std::numeric_limits<float>::max()),
-          competitorsInTournament(10), percentageForMutation(100),
-          terminated(false) {}
-    
-    /**
-     * Calculate the average of the population tours
-     */
-    static double average(std::vector<double> v) {
-      if (v.empty())
-        return 0;
-      return std::accumulate(v.begin(), v.end(), 0) / static_cast<double>(v.size());
-    }
-    /**
-     * The population size
-     */
-    int populationSize;
-    /**
-     * The population
-     */
-    std::vector<std::vector<int>> population;
-    /**
-     * The population distances
-     */
-    std::vector<double> populationEnergies;
-    /**
-     * The averages of the population distances
-     */
-    std::vector<double> averagesPopulationEnergies;
-    /**
-     * The best tour index
-     */
-    int bestTourIndex;
-    /**
-     * The number of generations
-     */
-    int numGenerations;
-    /**
-     * The current generation in execution
-     */
-    int currentGenerationNumber;
-    /**
-     * The number of competitors for selection by tournament
-     */
-    int competitorsInTournament;
-    /**
-     * Must be an integer from 0 - 100 defining a percentage for mutation
-     */
-    int percentageForMutation;
-    /**
-     * The current distance
-     */
-    float energy;
-    /**
-     * The best energy: shortest distance so far
-     */
-    float bestEnergy;
-    /**
-     * Current state
-     */
-    std::vector<int> state;
-    /**
-     * The best state observed so far
-     */
-    std::vector<int> bestState;
-    /**
-     * Whether or not the system has terminated
-     */
-    bool terminated;
-  };
-
   /**
-   * The runtime configuration of the algorithm
+   * The current distance
    */
-  class Config {
-  public:
-    Config()
-        : temp(0), outer(0), inner(0), energy(0), bestEnergy(0),
-          terminated(false) {}
-    /**
-     * The current temperature
-     */
-    float temp;
-    /**
-     * The current outer loop
-     */
-    int outer;
-    /**
-     * The current inner loop
-     */
-    int inner;
-    /**
-     * The current objective
-     */
-    float energy;
-    /**
-     * The current proposed energy (this variable is just for plotting in GUI).
-     * You can remove it from the code without losses.
-     */
-    float proposedEnergy;
-    /**
-     * The energies proposed
-     */
-    std::vector<float> proposedEnergies;
-    /**
-     * The currently best energy found
-     */
-    float bestEnergy;
-    /**
-     * Current state
-     */
-    std::vector<int> state;
-    /**
-     * The best state observed so far
-     */
-    std::vector<int> bestState;
-    /**
-     * Whether or not the system has terminated
-     */
-    bool terminated;
-    /**
-     * Time execution spent to run the optimizer
-     */
-    // long timeExecution{0};
-  };
-
+  float energy_;
   /**
-   * This class implements an observer for the optimizer. The observers can
-   * watch the optimization process
+   * The currently best energy found: shortest distance so far
    */
-  class Observer {
-  public:
-    /**
-     * This method is called by the optimizer
-     */
-    virtual void notify(const TSPInstance &instance,
-                        const ConfigSA &config) = 0;
-    virtual void notify(const TSPInstance &instance, const Config &config) = 0;
-  };
-
+  float bestEnergy_;
   /**
-   * This class defines a cooling schedule
+   * Current state
    */
-  class CoolingSchedule {
-  public:
-    /**
-     * Calculates the next temperature
-     */
-    virtual float nextTemp(const Config &config) const = 0;
-    /**
-     * Returns the initial temperature
-     */
-    virtual float initialTemp() const = 0;
-  };
-
+  std::vector<int> state_;
   /**
-   * This is a move service class that allows the random sampling of cities
+   * The best state observed so far
    */
-  class MoveService {
-  public:
-    /**
-     * Constructor
-     */
-    MoveService(int numCities)
-        : generator({std::random_device{}()}), distribution(1, numCities - 1) {}
-
-    /**
-     * Returns a random city
-     */
-    int sample() { return distribution(generator); }
-
-  private:
-    /**
-     * The random number generator
-     */
-    std::mt19937 generator;
-    /**
-     * The distribution over the cities
-     */
-    std::uniform_int_distribution<int> distribution;
-  };
-
+  std::vector<int> bestState_;
   /**
-   * This class implements a single neighborhood move
+   * Whether or not the system has terminated
    */
-  class Move {
-  public:
-    /**
-     * Computes a random neighbor according to some move strategy
-     */
-    virtual void propose(std::vector<int> &state) const = 0;
-
-    /**
-     * Sets the move service
-     */
-    void setMoveService(MoveService *_service) { service = _service; }
-
-  protected:
-    /**
-     * The move service
-     */
-    MoveService *service;
-  };
-
+  bool terminated_;
   /**
-   * Constructor
+   * Time execution spent to run the optimizer
    */
+  long timeExecution_;
+  /**
+   * Optimizer constructor
+  */
   Optimizer()
-      : coolingSchedule(0), outerLoops(100), innerLoops(1000),
-        notificationCycle(250) {}
-
+      : energy_(0.0f), bestEnergy_(std::numeric_limits<float>::max()),
+        terminated_(false), timeExecution_(0) {}
   /**
-   * The cooling schedule
+   * Runs the optimizer on a specific problem instance using Brute Force
    */
-  CoolingSchedule *coolingSchedule;
-  /**
-   * The number of outer iterations
-   */
-  int outerLoops;
-  /**
-   * The number of inner iterations
-   */
-  int innerLoops;
-  /**
-   * The notification cycle. Every c iterations, the observers are notified
-   */
-  int notificationCycle;
-  /**
-   * Runs the optimizer on a specific problem instance using Brute Force Dynamic
-   * Programming
-   */
-  // void optimize(const TSPInstance& instance, std::vector<int> & result,
-  // std::string brute_force) const;
-  /**
-   * Runs the optimizer on a specific problem instance using Simulated Annealing
-   */
-  void optimize(const TSPInstance &instance, std::vector<int> &result) const;
+  virtual void optimize(const TSPInstance &instance,
+                        std::vector<int> &result);
 
   /**
    * Adds an observer
    */
-  void addObserver(Observer *observer) { observers.push_back(observer); }
-
-  /**
-   * Adds a move
-   */
-  void addMove(Move *move) { moves.push_back(move); }
-
-  // Simple Genetic Algorithm
-  void optimize(const TSPInstance &instance, std::vector<int> &result,
-                std::string geneticAlgorithm) const;
-
+  void addObserver(Observer *observer) { observers_.push_back(observer); }
 private:
   /**
    * A list of observers
    */
-  std::vector<Observer *> observers;
-  /**
-   * A list of move classes
-   */
-  std::vector<Move *> moves;
+  std::vector<Observer *> observers_;
+  // std::map parameters;
 }; // end of Optimizer class
-
-/**
- * This is a geometric cooling schedule
- */
-class GeometricCoolingSchedule : public Optimizer::CoolingSchedule {
-public:
-  /**
-   * Constructor
-   */
-  GeometricCoolingSchedule(float initialTemp, float endTemp, float alpha)
-      : iTemp(initialTemp), eTemp(endTemp), alpha(alpha) {}
-
-  /**
-   * Calculates the next temperature
-   */
-  virtual float nextTemp(const Optimizer::Config &config) const {
-    return std::max(config.temp * alpha, eTemp);
-  }
-
-  /**
-   * Returns the initial temperature
-   */
-  virtual float initialTemp() const { return iTemp; }
-
-private:
-  /**
-   * The initial temperature
-   */
-  float iTemp;
-  /**
-   * End temperature
-   */
-  float eTemp;
-  /**
-   * alpha -> Decreasing constant
-   */
-  float alpha;
-};
-
-/**
- * This move reverses the order of a chain
- */
-class ChainReverseMove : public Optimizer::Move {
-public:
-  /**
-   * Computes a random neighbor according to some move strategy
-   */
-  virtual void propose(std::vector<int> &state) const {
-    // Sample two random cities and reverse the chain
-    std::reverse(state.begin() + service->sample(),
-                 state.begin() + service->sample());
-  }
-};
-
-/**
- * This move exchanges two cities in the current path
- */
-class SwapCityMove : public Optimizer::Move {
-public:
-  /**
-   * Computes a random neighbor according to some move strategy
-   */
-  virtual void propose(std::vector<int> &state) const {
-    std::swap(state[service->sample()], state[service->sample()]);
-  }
-};
-
-/**
- * This move rotates the current path
- */
-class RotateCityMove : public Optimizer::Move {
-public:
-  /**
-   * Computes a random neighbor according to some move strategy
-   */
-  virtual void propose(std::vector<int> &state) const {
-    std::vector<int> c(
-        {service->sample(), service->sample(), service->sample()});
-    std::sort(c.begin(), c.end());
-
-    std::rotate(state.begin() + c[0], state.begin() + c[1],
-                state.begin() + c[2]);
-  }
-};
-
-/**
- * This is the runtime GUI that let's you watch what happens during the
- * optimization procedure
- */
-class RuntimeGUI : public Optimizer::Observer {
-public:
-  /**
-   * Constructor
-   */
-  RuntimeGUI(int rows, int cols) : waitTime(25), gui(rows, cols, CV_8UC3) {
-    // Open the window
-    cv::namedWindow("TSP", 1);
-  }
-
-  /**
-   * Destructor
-   */
-  virtual ~RuntimeGUI() { cv::destroyWindow("TSP"); }
-
-  /**
-   * Paint the gui
-   */
-  virtual void notify(const TSPInstance &instance,
-                      const Optimizer::ConfigSA &configSA) override;
-  virtual void notify(const TSPInstance &instance,
-                      const Optimizer::Config &config) override;
-
-  /**
-   * The time the GUI pauses after each update. Set to 0 to let
-   * it wait for a keypress
-   */
-  int waitTime;
-
-private:
-  /**
-   * The GUI matrix
-   */
-  cv::Mat gui;
-  // CvPlot::Axes energyPlot;
-}; // end of RuntimeGUI class
 #endif

@@ -1,7 +1,8 @@
-#include "tsp.h"
-#include "optimizer.h"
 #include <map>
 #include <string>
+#include "tsp.h"
+#include "optimizer.h"
+#include "runtimegui.h"
 
 int main(int argc, const char** argv)
 {
@@ -21,7 +22,7 @@ int main(int argc, const char** argv)
     }
     else
     {
-        instance.createCircleOfCities(7);
+        instance.createCircleOfCities(8);
     }
     instance.calcDistanceMatrix();
     
@@ -53,8 +54,7 @@ int main(int argc, const char** argv)
     
     // Run the program
     std::vector<int> result;
-    // optimizer.optimize(instance, result);
-    optimizer.optimize(instance, result, "brute_force");
+    optimizer.optimize(instance, result);
     
     return 0;
 }
