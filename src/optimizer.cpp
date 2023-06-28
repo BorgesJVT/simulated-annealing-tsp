@@ -18,6 +18,8 @@ std::vector<std::vector<int>> generatePermutations(std::vector<int> cities)
 void Optimizer::optimize(const TSPInstance& instance, std::vector<int> &
 result, std::string brute_force) const
 {
+    // Start timer
+    auto lastUpdate = std::chrono::system_clock::now();
     // Get the number of cities
     int numCities = static_cast<int>(instance.getCities().size());
 
@@ -48,7 +50,13 @@ result, std::string brute_force) const
         configBF.bestState = optimalTour;
         observers[0]->notify(instance, configBF);
     }
-
+    // compute time difference to start timer
+    long timeSinceLastUpdate =
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now() - lastUpdate)
+            .count();
+    std::cout << "Elapsed time for optimization: " << timeSinceLastUpdate << "ms"
+                << std::endl;
     std::cout << "Optimal tour length: " << minTourLength << std::endl;
 }
 
