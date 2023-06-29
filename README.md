@@ -2,11 +2,13 @@
 
 This code shows how the traveling salesman problem can be solved applying different optimization algorithms.
 
-<img src="http://geekstack.net/tsp.gif" width="550" />
+
 
 ## How to compile the project?
 
-First, create a build directory
+First, install all the required dependencies. You only need to install OpenCV.
+
+Then, create a build directory
 ```
 $ mkdir build
 $ cd build
@@ -38,6 +40,7 @@ For a quick test, you can run an example from the data folder, like the followin
 ```
 $ ./solving_tsp ../data/wi29.tsp
 ```
+At the end, the program gives you the shortest path found.
 You can compare your results (using your parameters settings) to the optimal result [2]. 
 
 The program only works with instances of type TSP and edge weight type EUC_2D. 
