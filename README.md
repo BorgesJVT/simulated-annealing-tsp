@@ -79,3 +79,17 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+# Rubric Points Addressed
+* **The project demonstrates an understanding of C++ functions and control structures:** Several functions and control sctructures can be seen in all the code. Example: function _notify_ in runtimegui.cpp file, line 29.
+* **The project reads data from a file and process the data, or the program writes data to a file:** The program accepts an specified data file with extension .tsp.
+* **The project accepts user input and processes the input:** The user can easily change the algorithm parameters in the main file.
+* **The project uses Object Oriented Programming techniques.**
+* **Classes use appropriate access specifiers for class members.**
+* **Class constructors utilize member initialization lists.**
+* **Classes abstract implementation details from their interfaces.**
+* **Classes encapsulate behavior.**
+* **Classes follow an appropriate inheritance hierarchy.**
+* **Derived class functions override virtual base class functions.**
+* **The project makes use of references in function declarations.**
+* **The project uses smart pointers instead of raw pointers.**
