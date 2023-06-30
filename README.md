@@ -71,6 +71,7 @@ The yellow line shows the a possible new cycle that has been found so far. The p
 line shows the current best state. 
 
 # License
+
 The MIT License (MIT) Copyright (c) 2023 João Victor Borges
 The MIT License (MIT) Copyright (c) 2016 Tobias Pohlen
 
@@ -81,15 +82,15 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 # Rubric Points Addressed
-* **The project demonstrates an understanding of C++ functions and control structures.**
-* **The project reads data from a file and process the data, or the program writes data to a file.**
-* **The project accepts user input and processes the input.**
-* **The project uses Object Oriented Programming techniques.**
-* **Classes use appropriate access specifiers for class members.**
-* **Class constructors utilize member initialization lists.**
-* **Classes abstract implementation details from their interfaces.**
-* **Classes encapsulate behavior.**
-* **Classes follow an appropriate inheritance hierarchy.**
-* **Derived class functions override virtual base class functions.**
-* **The project makes use of references in function declarations.**
-* **The project uses smart pointers instead of raw pointers.**
+* **The project demonstrates an understanding of C++ functions and control structures:** Several places in the code. Ex.: Line 18 and line 38 in optimizer.cpp.
+* **The project reads data from a file and process the data, or the program writes data to a file:** The program can read a .tsp file that represents and instance of the TSP. Examples can be found on data folder. Line 38 in tsp.cpp.
+* **The project accepts user input and processes the input:** The user input are the parameters that can be set in the main.cpp file to tuning the algorithms.
+* **The project uses Object Oriented Programming techniques:** Several places in the code. The TSP problem is represented by a class as well as the Optimizer to solve the problem. We have several attributes and methods specified accordingly to its purpose. Ex.: Line 10 in sa_optimizer.h and line 10 in ga_optimizer.h.
+* **Classes use appropriate access specifiers for class members:** Ex.: Line 66, 71, 75 in optimizer.h are protected. So just the children classes can access. We want to ensure that the method setParameters() does not be called externally by the user.
+* **Class constructors utilize member initialization lists:** Ex.: Line 46 and 47 in optimizer.h and lines 54, 55, 56, 57, 58 in ga_optimizer.h.
+* **Classes abstract implementation details from their interfaces:** Ex.: Line 51 in optimizer.h. The optimize method is implemented in different ways for the different types of optimizers, but all have the same purpose.
+* **Classes encapsulate behavior:** Ex.: Line 51 in optimizer.h. The optimize method is implemented in different ways for the different types of optimizers, but all have the same purpose.
+* **Classes follow an appropriate inheritance hierarchy:** Several places in the code. Ex.: Line 10 in sa_optimizer.h and line 10 in ga_optimizer.h.
+* **Derived class functions override virtual base class functions:** Line 19 in runtimegui.h. The method notify is a pure virtual method that must be overrided. Line 44 in runtimegui.h overrides.
+* **The project makes use of references in function declarations:** Ex.: Line 44 in runtimegui.h takes references as input parameters.
+* **The project uses smart pointers instead of raw pointers:** A smart pointer to the optimizer is defined in the main.cpp file.
